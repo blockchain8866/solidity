@@ -202,7 +202,7 @@ bool CHC::visit(FunctionDefinition const& _function)
 
 	initFunction(_function);
 
-	auto functionEntryBlock = createBlock(m_currentFunction, PredicateType::FunctionEntry);
+	auto functionEntryBlock = createBlock(m_currentFunction, PredicateType::FunctionBlock);
 	auto bodyBlock = createBlock(&m_currentFunction->body(), PredicateType::FunctionBlock);
 
 	auto functionPred = predicate(*functionEntryBlock);
@@ -511,6 +511,32 @@ void CHC::endVisit(IndexRangeAccess const& _range)
 	m_context.addAssertion(sliceArray->length() == end - start);
 }
 
+void CHC::endVisit(Return const& _return)
+{
+	SMTEncoder::endVisit(_return);
+
+	auto const& returnDest = *m_returnDests.back();
+	connectBlocks(m_currentBlock, predicate(returnDest));
+
+	auto returnGhost = createBlock(&_return, PredicateType::FunctionBlock, "return_ghost_");
+	m_currentBlock = predicate(*returnGhost);
+}
+
+void CHC::pushInlineFrame(CallableDeclaration const* _callable)
+{
+	m_returnDests.push_back(createBlock(_callable, PredicateType::FunctionBlock, "return_"));
+}
+
+void CHC::popInlineFrame(CallableDeclaration const* _callable)
+{
+	solAssert(!m_returnDests.empty(), "");
+	auto const& ret = *m_returnDests.back();
+	solAssert(ret.programNode() == _callable, "");
+	connectBlocks(m_currentBlock, predicate(ret));
+	setCurrentBlock(ret);
+	m_returnDests.pop_back();
+}
+
 void CHC::visitAssert(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();
@@ -756,6 +782,7 @@ void CHC::resetContractAnalysis()
 	m_unknownFunctionCallSeen = false;
 	m_breakDest = nullptr;
 	m_continueDest = nullptr;
+	m_returnDests.clear();
 	errorFlag().resetIndex();
 }
 
@@ -806,7 +833,7 @@ set<unsigned> CHC::transactionVerificationTargetsIds(ASTNode const* _txRoot)
 
 SortPointer CHC::sort(FunctionDefinition const& _function)
 {
-	return functionSort(_function, m_currentContract, state());
+	return functionBodySort(_function, m_currentContract, state());
 }
 
 SortPointer CHC::sort(ASTNode const* _node)
@@ -1079,7 +1106,6 @@ smtutil::Expression CHC::predicate(Predicate const& _block)
 		return ::interface(_block, *m_currentContract, m_context);
 	case PredicateType::ConstructorSummary:
 		return constructor(_block, m_context);
-	case PredicateType::FunctionEntry:
 	case PredicateType::FunctionSummary:
 		return smt::function(_block, m_currentContract, m_context);
 	case PredicateType::FunctionBlock:
