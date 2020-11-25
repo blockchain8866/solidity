@@ -131,10 +131,10 @@ BOOST_AUTO_TEST_CASE(string_escapes)
 
 BOOST_AUTO_TEST_CASE(string_escapes_all)
 {
-	Scanner scanner(CharStream("  { \"a\\x61\\b\\f\\n\\r\\t\\v\"", ""));
+	Scanner scanner(CharStream("  { \"a\\x61\\n\\r\\t\"", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
-	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa\b\f\n\r\t\v");
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa\n\r\t");
 }
 
 BOOST_AUTO_TEST_CASE(string_escapes_with_zero)
