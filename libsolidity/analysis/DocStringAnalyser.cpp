@@ -42,7 +42,14 @@ void copyMissingTags(set<CallableDeclaration const*> const& _baseFunctions, Stru
 	if (_baseFunctions.size() != 1)
 		return;
 
-	auto& sourceDoc = dynamic_cast<StructurallyDocumentedAnnotation const&>((*_baseFunctions.begin())->annotation());
+	auto hasParameter = [](CallableDeclaration const& __declaration, size_t _n)
+	{
+		return __declaration.returnParameterList() &&
+			__declaration.returnParameters().size() > _n;
+	};
+
+	auto& baseFunction = **_baseFunctions.begin();
+	auto& sourceDoc = dynamic_cast<StructurallyDocumentedAnnotation const&>(baseFunction.annotation());
 
 	for (auto it = sourceDoc.docTags.begin(); it != sourceDoc.docTags.end();)
 	{
@@ -66,9 +73,15 @@ void copyMissingTags(set<CallableDeclaration const*> const& _baseFunctions, Stru
 				size_t docParaNameEndPos = content.content.find_first_of(" \t");
 				string const docParameterName = content.content.substr(0, docParaNameEndPos);
 
-				if (docParameterName != _declaration->returnParameters().at(n)->name())
+				if (
+					hasParameter(*_declaration, n) &&
+					docParameterName != _declaration->returnParameters().at(n)->name()
+				)
 				{
-					bool baseHasNoName = (*_baseFunctions.begin())->returnParameters().at(n)->name().empty();
+					bool baseHasNoName =
+						hasParameter(baseFunction, n) &&
+						baseFunction.returnParameters().at(n)->name().empty();
+
 					string paramName = _declaration->returnParameters().at(n)->name();
 					content.content =
 						(paramName.empty() ? "" : std::move(paramName) + " ") + (
