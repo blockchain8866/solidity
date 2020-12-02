@@ -13,4 +13,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (191-210): CHC: Assertion violation happens here.
+// Warning 6328: (191-210): CHC: Assertion violation happens here.\nCounterexample:\na = [5, 5, 4, 5, 5, 5]\n\n\n\nTransaction trace:\nconstructor()\nState: a = []\ng()

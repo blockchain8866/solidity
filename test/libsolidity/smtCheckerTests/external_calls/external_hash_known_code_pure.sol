@@ -28,4 +28,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (431-453): CHC: Assertion violation happens here.
+// Warning 6328: (431-453): CHC: Assertion violation happens here.\nCounterexample:\nowner = 7, sig_1 = 0, sig_2 = (- 1), d = 0\n\n\n\nTransaction trace:\nconstructor()\nState: owner = 7, sig_1 = 0, sig_2 = 0, d = 0\nf1(0)\nState: owner = 7, sig_1 = 0, sig_2 = (- 1), d = 0\ninv()

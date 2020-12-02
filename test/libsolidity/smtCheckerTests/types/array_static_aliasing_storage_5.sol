@@ -21,4 +21,4 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (338-355): CHC: Assertion violation happens here.
+// Warning 6328: (338-355): CHC: Assertion violation happens here.\nCounterexample:\nb1 = [1, 17, 17, 17, 17], b2 = []\nx = false\nc = [0, 6, 6, 6, 6, 6, 6]\n\n\nTransaction trace:\nconstructor()\nState: b1 = [0, 0], b2 = [0, 0]\ng(false, [0, 6, 6, 6, 6, 6, 6])

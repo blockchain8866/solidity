@@ -39,4 +39,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (685-705): CHC: Assertion violation happens here.
+// Warning 6328: (685-705): CHC: Assertion violation happens here.\nCounterexample:\na = [], b = []\nx = 21239\ny = 21239\nz = 21238\nv = 7720\n\n\nTransaction trace:\nconstructor()\nState: a = [], b = []\nj(21239, 21239, 21238, 7720)

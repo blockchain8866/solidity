@@ -17,4 +17,4 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (371-388): CHC: Assertion violation happens here.
+// Warning 6328: (371-388): CHC: Assertion violation happens here.\nCounterexample:\narray = []\na = [1, 8, 8, 8, 8, 8, 8, 8, 8]\nb = [1, 20, 20, 20, 20]\n\n\nTransaction trace:\nconstructor()\nState: array = []\nf([38, 6, 6, 6, 6, 6, 6], [])
