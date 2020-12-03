@@ -171,9 +171,14 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact, bool _wildcardMatchesExperimental)
 {
 	static set<string> experimental{"ir", "irOptimized", "wast", "ewasm", "ewasm.wast"};
-	for (auto const& artifact: _outputSelection)
-		/// @TODO support sub-matching, e.g "evm" matches "evm.assembly"
-		if (artifact == _artifact)
+	for (auto const& artifactJson: _outputSelection)
+	{
+		string const& artifact = artifactJson.asString();
+		if (_artifact == artifact || (
+			_artifact.size() > artifact.size() &&
+			_artifact.substr(0, artifact.size()) == artifact &&
+			_artifact.at(artifact.size()) == '.'
+		))
 			return true;
 		else if (artifact == "*")
 		{
@@ -181,6 +186,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _art
 			if (experimental.count(_artifact) == 0 || _wildcardMatchesExperimental)
 				return true;
 		}
+	}
 	return false;
 }
 
@@ -370,17 +376,23 @@ Json::Value collectEVMObject(
 	evmasm::LinkerObject const& _object,
 	string const* _sourceMap,
 	Json::Value _generatedSources,
-	bool _runtimeObject
+	bool _runtimeObject,
+	function<bool(string)> const& _artifactRequested
 )
 {
 	Json::Value output = Json::objectValue;
-	output["object"] = _object.toHex();
-	output["opcodes"] = evmasm::disassemble(_object.bytecode);
-	output["sourceMap"] = _sourceMap ? *_sourceMap : "";
-	output["linkReferences"] = formatLinkReferences(_object.linkReferences);
-	if (_runtimeObject)
+	if (_artifactRequested("object"))
+		output["object"] = _object.toHex();
+	if (_artifactRequested("opcodes"))
+		output["opcodes"] = evmasm::disassemble(_object.bytecode);
+	if (_artifactRequested("sourceMap"))
+		output["sourceMap"] = _sourceMap ? *_sourceMap : "";
+	if (_artifactRequested("linkReferences"))
+		output["linkReferences"] = formatLinkReferences(_object.linkReferences);
+	if (_runtimeObject && _artifactRequested("immutableReferences"))
 		output["immutableReferences"] = formatImmutableReferences(_object.immutableReferences);
-	output["generatedSources"] = move(_generatedSources);
+	if (_artifactRequested("generatedSources"))
+		output["generatedSources"] = move(_generatedSources);
 	return output;
 }
 
@@ -1147,7 +1159,14 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 				compilerStack.object(contractName),
 				compilerStack.sourceMapping(contractName),
 				compilerStack.generatedSources(contractName),
-				false
+				false,
+				[&](string const& _element) { return isArtifactRequested(
+					_inputsAndSettings.outputSelection,
+					file,
+					name,
+					"evm.bytecode." + _element,
+					wildcardMatchesExperimental
+				); }
 			);
 
 		if (compilationSuccess && isArtifactRequested(
@@ -1161,7 +1180,14 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 				compilerStack.runtimeObject(contractName),
 				compilerStack.runtimeSourceMapping(contractName),
 				compilerStack.generatedSources(contractName, true),
-				true
+				true,
+				[&](string const& _element) { return isArtifactRequested(
+					_inputsAndSettings.outputSelection,
+					file,
+					name,
+					"evm.deployedBytecode." + _element,
+					wildcardMatchesExperimental
+				); }
 			);
 
 		if (!evmData.empty())
@@ -1258,7 +1284,19 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 			MachineAssemblyObject const& o = objectKind == "bytecode" ? object : runtimeObject;
 			if (o.bytecode)
 				output["contracts"][sourceName][contractName]["evm"][objectKind] =
-					collectEVMObject(*o.bytecode, o.sourceMappings.get(), Json::arrayValue, false);
+					collectEVMObject(
+						*o.bytecode,
+						o.sourceMappings.get(),
+						Json::arrayValue,
+						false,
+						[&](string const& _element) { return isArtifactRequested(
+							_inputsAndSettings.outputSelection,
+							sourceName,
+							contractName,
+							"evm." + objectKind + "." + _element,
+							wildcardMatchesExperimental
+						); }
+					);
 		}
 
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
