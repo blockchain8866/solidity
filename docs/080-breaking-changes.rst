@@ -92,6 +92,10 @@ New Restrictions
 * Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of
   public functions and events.
 
+* The global variables ``tx.origin`` and ``msg.sender`` have the type ``address`` instead of
+  ``address payable``. One can convert then into ``address payable`` by using an explicit
+  conversion, i.e., ``payable(tx.origin)`` or ``payable(msg.sender)``.
+
 Interface Changes
 =================
 
