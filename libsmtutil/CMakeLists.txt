@@ -27,7 +27,10 @@ endif()
 add_library(smtutil ${sources} ${z3_SRCS} ${cvc4_SRCS})
 target_link_libraries(smtutil PUBLIC solutil Boost::boost)
 
-if (${Z3_FOUND})
+if (${USE_Z3_DLLOAD})
+  add_subdirectory(z3)
+  target_link_libraries(smtutil PUBLIC z3wrapper)
+elseif (${Z3_FOUND})
   target_link_libraries(smtutil PUBLIC z3::libz3)
 endif()
 

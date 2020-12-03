@@ -22,6 +22,7 @@ if (IS_BIG_ENDIAN)
 endif()
 
 option(SOLC_LINK_STATIC "Link solc executable statically on supported platforms" OFF)
+option(SOLC_STATIC_STDLIBS "Link solc against static versions of libgcc and libstdc++ on supported platforms" OFF)
 
 # Setup cccache.
 include(EthCcache)
@@ -51,10 +52,16 @@ configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/license.h.in" include/licens
 include(EthOptions)
 configure_project(TESTS)
 
-find_package(Z3 4.6.0)
-if (${Z3_FOUND})
+if(${USE_Z3_DLLOAD})
   add_definitions(-DHAVE_Z3)
-  message("Z3 SMT solver found. This enables optional SMT checking with Z3.")
+  add_definitions(-DHAVE_Z3_DLLOAD)
+  set(Z3_FOUND TRUE)
+else()
+  find_package(Z3 4.6.0)
+  if (${Z3_FOUND})
+    add_definitions(-DHAVE_Z3)
+    message("Z3 SMT solver found. This enables optional SMT checking with Z3.")
+  endif()
 endif()
 
 find_package(CVC4 QUIET)

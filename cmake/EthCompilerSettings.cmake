@@ -204,6 +204,7 @@ endif()
 
 # SMT Solvers integration
 option(USE_Z3 "Allow compiling with Z3 SMT solver integration" ON)
+option(USE_Z3_DLLOAD "Dynamically load the Z3 SMT solver instead of linking against it." OFF)
 option(USE_CVC4 "Allow compiling with CVC4 SMT solver integration" ON)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
