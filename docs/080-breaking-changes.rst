@@ -52,6 +52,10 @@ New Restrictions
      with ``type(uint).max``.
   3. Explicit conversions between literals and enums are only allowed if the literal can
      represent a value in the enum.
+  4. Explicit conversions between literals and ``address payable`` are disallowed. The explicit
+     conversion ``address(literal)`` returns the type ``address`` instead of ``address payable``. To
+     get the type ``address payable``, one has to explicitly convert it, i.e.,
+     ``payable(address(literal))``.
 
 * There are new restrictions on explicit type conversions. The conversion is only allowed when there
   is at most one change in sign, width or type-category (``int``, ``address``, ``bytesNN``, etc.)
