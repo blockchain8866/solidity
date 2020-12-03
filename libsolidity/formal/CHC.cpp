@@ -58,7 +58,9 @@ CHC::CHC(
 	m_queryTimeout(_timeout)
 {
 	bool usesZ3 = _enabledSolvers.z3;
-#ifndef HAVE_Z3
+#ifdef HAVE_Z3
+	usesZ3 = usesZ3 && Z3Interface::available();
+#else
 	usesZ3 = false;
 #endif
 	if (!usesZ3)
@@ -727,7 +729,7 @@ void CHC::resetSourceAnalysis()
 
 	bool usesZ3 = false;
 #ifdef HAVE_Z3
-	usesZ3 = m_enabledSolvers.z3;
+	usesZ3 = m_enabledSolvers.z3 && Z3Interface::available();
 	if (usesZ3)
 	{
 		/// z3::fixedpoint does not have a reset mechanism, so we need to create another.
