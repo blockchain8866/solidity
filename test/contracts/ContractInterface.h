@@ -67,8 +67,8 @@ protected:
 		bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
 		BOOST_REQUIRE(ret.size() == 0x20);
 		BOOST_CHECK(std::count(ret.begin(), ret.begin() + 12, 0) == 12);
-		// TODO: simplify this
-		return u160(u256(util::h256(ret)));
+		bytes const addr{ret.begin() + 12, ret.end()};
+		return util::h160(addr);
 	}
 
 	std::string callAddressReturnsString(std::string const& _name, util::h160 const& _arg)
