@@ -180,16 +180,16 @@ function force_solc_settings
     echo "module.exports['compilers']['solc']['settings'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
 }
 
-function force_abi_v2
+function force_abi_v1
 {
-    # Add "pragma abi coder v2" to all files.
-    printLog "Forcibly enabling abi coder v2..."
+    # Add "pragma abi coder v1" to all files.
+    printLog "Forcibly enabling abi coder v1..."
     find contracts test -name '*.sol' -type f -print0 | \
     while IFS= read -r -d '' file
     do
         # Only add the pragma if it is not already there.
-        if grep -q -v 'pragma abicoder v2' "$file"; then
-            sed -i -e '1 i pragma abicoder v2;' "$file"
+        if grep -q -v 'pragma abicoder' "$file"; then
+            sed -i -e '1 i pragma abicoder v1;' "$file"
         fi
     done
 }
@@ -238,9 +238,9 @@ function truffle_run_test
     local soljson="$1"
     local compile_fn="$2"
     local test_fn="$3"
-    local force_abi_v2_flag="$4"
+    local force_abi_v1_flag="$4"
 
-    test "$force_abi_v2_flag" = "FORCE-ABI-V2" || test "$force_abi_v2_flag" = "NO-FORCE-ABI-V2"
+    test "$force_abi_v1_flag" = "FORCE-ABI-V1" || test "$force_abi_v1_flag" = "NO-FORCE-ABI-V1"
 
     replace_version_pragmas
     force_solc "$CONFIG" "$DIR" "$soljson"
@@ -264,9 +264,9 @@ function truffle_run_test
     do
         clean
         force_solc_settings "$CONFIG" "$optimize" "istanbul"
-        # Force abi coder v2 in the last step. Has to be the last because code is modified.
-        if [ "$force_abi_v2_flag" = "FORCE-ABI-V2" ]; then
-            [[ "$optimize" =~ yul ]] && force_abi_v2
+        # Force abi coder v1 in the last step. Has to be the last because code is modified.
+        if [ "$force_abi_v1_flag" = "FORCE-ABI-V1" ]; then
+            [[ "$optimize" =~ yul ]] && force_abi_v1
         fi
 
         printLog "Running compile function..."
